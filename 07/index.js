@@ -9,11 +9,10 @@ const func = async (data) => {
       system.addCommand(element);
     });
     system.print();
-    // system.getSize();
     const size = system.getSize();
-    // console.log('size: ', size);
+    console.log('size: ', size);
     const sizes = system.getDirSizes(100000);
-    // console.log(sizes);
+    console.log(sizes);
   } catch (error) {
     console.log('error: ', error);
   }

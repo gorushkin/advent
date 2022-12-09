@@ -37,10 +37,15 @@ class Dir extends Object {
     return `${this.name}:`;
   }
 
+  updateSize(size) {
+    this.size += size;
+    if (this.parent) this.parent.updateSize(size);
+  }
+
   add(object) {
     this.children.push(object);
-    const size = this.getSize();
-    this.size = size;
+    if (object.isDir()) return;
+    this.updateSize(Number(object.size));
   }
 
   getChild(name) {
@@ -49,7 +54,9 @@ class Dir extends Object {
   }
 
   getSize() {
-    const size = this.children.reduce((acc, item) => acc + Number(item.getSize()), 0);
+    const size = this.children.reduce((acc, item) => {
+      return acc + Number(item.getSize());
+    }, 0);
     return size;
   }
 
@@ -141,6 +148,7 @@ export class System {
   }
 
   getDirSizes(n) {
+    this.system.getSize();
     const sizes = this.system.getDirSizes(n).filter(({ size }) => size < n && size > 0);
     const result = sizes.reduce((acc, item) => acc + item.size, 0);
     return result;
