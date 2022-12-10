@@ -104,6 +104,7 @@ export class System {
     this.system = new Dir('/', null);
     this.name = null;
     this.dir = this.system;
+    this.space = 70000000;
   }
 
   loc() {
@@ -147,11 +148,15 @@ export class System {
     return result;
   }
 
-  getDirSizes(n) {
+  getDirSizes(limit = null) {
     this.system.getSize();
-    const sizes = this.system.getDirSizes(n).filter(({ size }) => size < n && size > 0);
-    const result = sizes.reduce((acc, item) => acc + item.size, 0);
-    return result;
+    const sizes = this.system.getDirSizes(limit);
+    return limit ? sizes.filter(({ size }) => size < limit && size > 0) : sizes;
+  }
+
+  getFreeSpace() {
+    const size = this.space - this.getSize();
+    return size;
   }
 
   addCommand(str) {
