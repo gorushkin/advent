@@ -8,8 +8,10 @@ const func = (data) => {
   motions.forEach((motion) => {
     bridge.addMotion(motion);
   });
-  bridge.showTailPositions();
+  bridge.reccur()
+  // bridge.showTailPositions();
   // bridge.getDiagram();
+  // bridge.getAllDiagramms();
 };
 
 const wrongAnswers = [1789];

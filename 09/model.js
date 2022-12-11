@@ -1,19 +1,20 @@
-class Rope {
-  constructor() {
-    this.head = { x: 0, y: 0 };
-    this.tail = { x: 0, y: 0 };
+class Tail {
+  constructor(n) {
+    this.x = 0;
+    this.y = 0;
+    this.tail = n >= 1 ? new Tail(n - 1) : null;
     this.tailPositions = [{ x: 0, y: 0 }];
+    this.depth = n;
   }
 
-  getDistance() {
-    const d = Math.sqrt(
-      Math.pow(this.head.y - this.tail.y, 2) + Math.pow(this.head.x - this.tail.x, 2)
-    );
-    return d;
+  tailInfo(x) {
+    if (this.tail) {
+      this.tailInfo.call(this.tail, x + this.depth);
+    }
   }
 
   updatePositions() {
-    const { x, y } = this.tail;
+    const { x, y } = this;
     const isVisited = this.tailPositions.findIndex((item) => item.x === x && item.y === y);
     if (isVisited !== -1) {
       return;
@@ -21,26 +22,42 @@ class Rope {
     this.tailPositions.push({ x, y });
   }
 
-  moveTail({ x, y }) {
-    if (x !== null) this.tail.x = x;
-    if (y !== null) this.tail.y = y;
-    this.updatePositions();
+  getDistance(head) {
+    const d = Math.sqrt(Math.pow(head.y - this.y, 2) + Math.pow(head.x - this.x, 2));
+    return d;
   }
 
-  findNewTailPosition() {
-    const distance = this.getDistance();
+  moveTail({ x, y }) {
+    if (x !== null) this.x = x;
+    if (y !== null) this.y = y;
+    this.updatePositions();
+    const newHead = { x: this.x, y: this.y };
+    if (this.tail) {
+      this.findNewTailPosition.call(this.tail, newHead);
+    }
+  }
+
+  findNewTailPosition(head) {
+    const distance = this.getDistance(head);
     if (distance <= Math.sqrt(2)) return;
-    const y = this.tail.y + (this.head.y > this.tail.y ? 1 : -1);
-    const x = this.tail.x + (this.head.x > this.tail.x ? 1 : -1);
-    if (this.head.x === this.tail.x) {
+    const y = this.y + (head.y > this.y ? 1 : -1);
+    const x = this.x + (head.x > this.x ? 1 : -1);
+    if (head.x === this.x) {
       this.moveTail({ x: null, y });
       return;
     }
-    if (this.head.y === this.tail.y) {
+    if (head.y === this.y) {
       this.moveTail({ x, y: null });
       return;
     }
     this.moveTail({ x, y });
+  }
+}
+
+class Rope {
+  constructor(n) {
+    this.head = { x: 0, y: 0 };
+    this.tail = new Tail(n);
   }
 
   moveHead(direction) {
@@ -50,19 +67,22 @@ class Rope {
       U: () => (this.head.y += 1),
       D: () => (this.head.y -= 1),
     };
-
     mapping[direction]();
-    this.findNewTailPosition();
+    this.tail.findNewTailPosition(this.head);
   }
 
   printPositions() {
-    console.log(this.tailPositions.length);
+    console.log(this.tail.tailPositions.length);
+  }
+
+  info() {
+    this.tail.tailInfo(2);
   }
 }
 
 export class Bridge {
   constructor() {
-    this.rope = new Rope();
+    this.rope = new Rope(8);
     this.width = 0;
     this.height = 0;
   }
@@ -74,13 +94,8 @@ export class Bridge {
     }
   }
 
-  showTailPositions() {
-    this.rope.printPositions();
-  }
-
-  getDiagram() {
-    console.log('this.rope.tailPositions: ', this.rope.tailPositions);
-    const parametres = this.rope.tailPositions.reduce(
+  getDiagram(tailPositions) {
+    const parametres = tailPositions.reduce(
       (acc, item, i, arr) => {
         const tempAcc = acc;
         if (item.x >= acc.maxX) tempAcc.maxX = item.x;
@@ -90,10 +105,10 @@ export class Bridge {
         return tempAcc;
       },
       {
-        maxX: this.rope.tailPositions[0].x,
-        maxY: this.rope.tailPositions[0].y,
-        minX: this.rope.tailPositions[0].x,
-        minY: this.rope.tailPositions[0].y,
+        maxX: tailPositions[0].x,
+        maxY: tailPositions[0].y,
+        minX: tailPositions[0].x,
+        minY: tailPositions[0].y,
       }
     );
     const height = parametres.maxX - parametres.minX;
@@ -102,7 +117,7 @@ export class Bridge {
     const offsetY = parametres.minY;
     const initRows = new Array(width + 1).fill('_');
     const rowDiagramm = initRows.map((item) => new Array(height + 1).fill('_'));
-    this.rope.tailPositions.forEach((item) => {
+    tailPositions.forEach((item) => {
       try {
         rowDiagramm[item.y - offsetY][item.x - offsetX] = '#';
       } catch (error) {
@@ -112,5 +127,21 @@ export class Bridge {
     });
     const diiagramm = rowDiagramm.map((row) => row.join(' ')).join('\n');
     console.log(diiagramm);
+  }
+
+  reccur() {
+    this.rope.info();
+  }
+
+  showTailPositions() {
+    this.rope.printPositions();
+  }
+
+  getAllDiagramms(tail = this.rope.tail) {
+    const tailPositions = tail.tailPositions;
+    this.getDiagram(tailPositions);
+    if (tail.tail) {
+      this.getDiagram(tail.tail.tailPositions)
+    }
   }
 }
