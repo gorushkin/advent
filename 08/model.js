@@ -57,7 +57,7 @@ export class Forest {
   }
 
   printEntity(index, entity) {
-    return entity[index].map((item) => item.height).join(' ');
+    return entity[index].map((item) => item.height).join('');
   }
 
   printColumn(y) {
@@ -68,22 +68,22 @@ export class Forest {
     console.log(this.printEntity(x, this.rows));
   }
 
+  getRelatedTrees(x, y) {
+    const treeRow = this.rows[x];
+    const treeColumn = this.columns[y];
+    return {
+      right: treeRow.slice(y + 1, treeRow.length),
+      left: treeRow.slice(0, y),
+      down: treeColumn.slice(x + 1, treeColumn.length),
+      up: treeColumn.slice(0, x),
+    };
+  }
+
   checkTreeVisibility(tree, index) {
     const reduceList = (list) => list.reduce((acc, item) => acc && height > item.height, true);
 
-    const getTrees = (x, y) => {
-      const treeRow = this.rows[x];
-      const treeColumn = this.columns[y];
-      return {
-        rowRight: treeRow.slice(y + 1, treeRow.length),
-        rowLeft: treeRow.slice(0, y),
-        columnBottom: treeColumn.slice(x + 1, treeColumn.length),
-        columnTop: treeColumn.slice(0, x),
-      };
-    };
-
     const { x, y, height } = tree;
-    const trees = getTrees(x, y);
+    const trees = this.getRelatedTrees(x, y);
 
     const visibility = Object.entries(trees).reduce(
       (acc, [key, value]) => ({ ...acc, [key]: reduceList(value) }),
@@ -93,7 +93,46 @@ export class Forest {
   }
 
   getVisibleTrees() {
-    const result = this.forest.filter((tree, index) => this.checkTreeVisibility(tree, index));
-    console.log(result.length);
+    const trees = this.forest.filter((tree, index) => this.checkTreeVisibility(tree, index));
+    console.log('visible trees: ', trees.length);
+  }
+
+  getDownScore(height, trees) {
+    let score = 0;
+    for (let i = trees.length - 1; i >= 0; i--) {
+      const comparedTree = trees[i];
+      score += 1;
+      if (height <= comparedTree.height) break;
+    }
+    return score;
+  }
+
+  getUpScore(height, trees) {
+    let score = 0;
+    for (let i = 0; i < trees.length; i++) {
+      const comparedTree = trees[i];
+      score += 1;
+      if (height <= comparedTree.height) break;
+    }
+    return score;
+  }
+
+  getTreeScenicScore(tree, index) {
+    const { x, y, height } = tree;
+    const trees = this.getRelatedTrees(x, y);
+
+    const left = this.getDownScore(height, trees.left);
+    const right = this.getUpScore(height, trees.right);
+    const up = this.getDownScore(height, trees.up);
+    const down = this.getUpScore(height, trees.down);
+    const scores = { left, right, up, down };
+    const score = Object.values(scores).reduce((acc, item) => acc * item, 1);
+    return { ...tree, score, scores };
+  }
+
+  getScenicScores() {
+    const scores = this.forest.map((item, index) => this.getTreeScenicScore(item, index));
+    const maxTree = scores.reduce((max, item) => (item.score > max.score ? item : max));
+    console.log('maxTree: ', maxTree);
   }
 }

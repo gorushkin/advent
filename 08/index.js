@@ -1,12 +1,16 @@
-import { getData, getDirname, getPath, getAbsolutPath } from '../utils.js';
+import { getData, getDirname, getPath } from '../utils.js';
 import { Forest } from './model.js';
 const dirname = getDirname(import.meta.url);
 
 const func = async (data) => {
-  const forest = new Forest();
-  forest.parseMap(data);
-  // forest.checkTreeVisibility()
-  forest.getVisibleTrees();
+  try {
+    const forest = new Forest();
+    forest.parseMap(data);
+    forest.getVisibleTrees();
+    forest.getScenicScores();
+  } catch (error) {
+    console.log('error: ', error);
+  }
 };
 
 const app = async () => {
